@@ -4,12 +4,12 @@
 	import { browser } from '$app/environment';
 
 	let colors = $state({
-		red: { count: 10 },
-		blue: { count: 10 },
-		yellow: { count: 10 },
-		green: { count: 10 },
-		purple: { count: 10 },
-		orange: { count: 10 }
+		red: { count: 4 },
+		blue: { count: 4 },
+		yellow: { count: 4 },
+		green: { count: 4 },
+		purple: { count: 8 },
+		orange: { count: 4 }
 	});
 
 	let rows = $state(4);
@@ -32,15 +32,15 @@
 			Object.entries(colors).map(([color, info]) => [color, { count: info.count }])
 		);
 
-		function getRandomAvailableColor(): string | null {
+		function getRandomAvailableColor(multiplier: number = 1): string | null {
 			const availableColors = Object.entries(colorUsage)
-				.filter(([_, info]) => info.count > 0)
+				.filter(([_, info]) => info.count >= multiplier) // Check if we have enough tiles
 				.map(([name]) => name);
 
 			if (availableColors.length === 0) return null;
 
 			const color = availableColors[Math.floor(Math.random() * availableColors.length)];
-			colorUsage[color].count--;
+			colorUsage[color].count -= multiplier; // Subtract the actual number of tiles we'll use
 			return color;
 		}
 
@@ -51,20 +51,20 @@
 		switch (effectiveSymmetry) {
 			case 'horizontal': {
 				const midRow = Math.floor(rows / 2);
-				// Fill top half
+				// Fill top half (needs 2 tiles per color)
 				for (let i = 0; i < midRow; i++) {
 					for (let j = 0; j < cols; j++) {
-						const color = getRandomAvailableColor();
+						const color = getRandomAvailableColor(2); // Will use 2 tiles
 						if (color) {
 							newGrid[i][j] = color;
-							newGrid[rows - 1 - i][j] = color; // Mirror to bottom
+							newGrid[rows - 1 - i][j] = color;
 						}
 					}
 				}
-				// If odd number of rows, fill middle row
+				// Middle row (if odd) only needs 1 tile per color
 				if (rows % 2 !== 0) {
 					for (let j = 0; j < cols; j++) {
-						const color = getRandomAvailableColor();
+						const color = getRandomAvailableColor(1);
 						if (color) {
 							newGrid[midRow][j] = color;
 						}
@@ -78,7 +78,7 @@
 				// Fill left half
 				for (let i = 0; i < rows; i++) {
 					for (let j = 0; j < midCol; j++) {
-						const color = getRandomAvailableColor();
+						const color = getRandomAvailableColor(2);
 						if (color) {
 							newGrid[i][j] = color;
 							newGrid[i][cols - 1 - j] = color; // Mirror to right
@@ -88,7 +88,7 @@
 				// If odd number of columns, fill middle column
 				if (cols % 2 !== 0) {
 					for (let i = 0; i < rows; i++) {
-						const color = getRandomAvailableColor();
+						const color = getRandomAvailableColor(1);
 						if (color) {
 							newGrid[i][midCol] = color;
 						}
@@ -103,7 +103,7 @@
 				// Fill quarter of the grid
 				for (let i = 0; i < midRow; i++) {
 					for (let j = 0; j < midCol; j++) {
-						const color = getRandomAvailableColor();
+						const color = getRandomAvailableColor(4);
 						if (color) {
 							// Place in all four corners
 							newGrid[i][j] = color;
@@ -122,7 +122,7 @@
 				// Fill quarter of the grid
 				for (let i = 0; i < midRow; i++) {
 					for (let j = 0; j < midCol; j++) {
-						const color = getRandomAvailableColor();
+						const color = getRandomAvailableColor(4);
 						if (color) {
 							// Rotate four times
 							newGrid[i][j] = color;
@@ -139,7 +139,7 @@
 				// No symmetry - fill normally
 				for (let i = 0; i < rows; i++) {
 					for (let j = 0; j < cols; j++) {
-						const color = getRandomAvailableColor();
+						const color = getRandomAvailableColor(1);
 						if (color) {
 							newGrid[i][j] = color;
 						}

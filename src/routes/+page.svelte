@@ -15,9 +15,18 @@
 	let rows = $state(4);
 	let cols = $state(4);
 	let grid = $state<string[][]>([]);
-	let symmetry = $state('none'); // 'none', 'mirror', 'rotation'
+	const SYMMETRY_TYPES = ['none', 'horizontal', 'vertical', 'rotation180', 'rotation90'] as const;
+	type SymmetryType = (typeof SYMMETRY_TYPES)[number];
+
+	let symmetry = $state<'random' | SymmetryType>('random');
 
 	function generateGrid() {
+		// If symmetry is random, pick a random type
+		const effectiveSymmetry: SymmetryType =
+			symmetry === 'random'
+				? SYMMETRY_TYPES[Math.floor(Math.random() * SYMMETRY_TYPES.length)]
+				: symmetry;
+
 		// Create a copy of colors to track usage
 		const colorUsage = Object.fromEntries(
 			Object.entries(colors).map(([color, info]) => [color, { count: info.count }])
@@ -39,7 +48,7 @@
 			.fill(null)
 			.map(() => Array(cols).fill(null));
 
-		switch (symmetry) {
+		switch (effectiveSymmetry) {
 			case 'horizontal': {
 				const midRow = Math.floor(rows / 2);
 				// Fill top half
@@ -193,6 +202,7 @@
 							bind:value={symmetry}
 							class="select select-bordered select-sm w-full"
 						>
+							<option value="random">Random</option>
 							<option value="none">None</option>
 							<option value="horizontal">Horizontal Mirror</option>
 							<option value="vertical">Vertical Mirror</option>

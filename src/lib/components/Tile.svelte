@@ -2,23 +2,23 @@
 	export let color: string;
 
 	$: colorObj = {
-		topLeft: `var(--tile-${color}-light)`,
-		topRight: `var(--tile-${color}-base)`,
-		bottomLeft: `var(--tile-${color}-base)`,
-		bottomRight: `var(--tile-${color}-dark)`
+		left: `var(--tile-${color}-base)`,
+		right: `var(--tile-${color}-base)`,
+		bottom: `var(--tile-${color}-light)`,
+		top: `var(--tile-${color}-dark)`
 	};
 </script>
 
 <div class="tile-container">
 	<svg viewBox="0 0 100 100" class="h-full w-full">
 		<!-- Top-left triangle -->
-		<path d="M0 0 L50 50 L0 100 Z" fill={colorObj.topLeft} />
+		<path d="M0 0 L50 50 L0 100 Z" fill={colorObj.left} />
 		<!-- Top-right triangle -->
-		<path d="M100 0 L50 50 L100 100 Z" fill={colorObj.topRight} />
+		<path d="M100 0 L50 50 L100 100 Z" fill={colorObj.right} />
 		<!-- Bottom-left triangle -->
-		<path d="M0 100 L50 50 L100 100 Z" fill={colorObj.bottomLeft} />
+		<path d="M0 100 L50 50 L100 100 Z" fill={colorObj.bottom} />
 		<!-- Bottom-right triangle -->
-		<path d="M0 0 L50 50 L100 0 Z" fill={colorObj.bottomRight} />
+		<path d="M0 0 L50 50 L100 0 Z" fill={colorObj.top} />
 	</svg>
 </div>
 

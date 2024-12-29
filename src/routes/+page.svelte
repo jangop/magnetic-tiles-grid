@@ -18,18 +18,127 @@
 	let symmetry = $state('none'); // 'none', 'mirror', 'rotation'
 
 	function generateGrid() {
+		// Create a copy of colors to track usage
+		const colorUsage = Object.fromEntries(
+			Object.entries(colors).map(([color, info]) => [color, { count: info.count }])
+		);
+
+		function getRandomAvailableColor(): string | null {
+			const availableColors = Object.entries(colorUsage)
+				.filter(([_, info]) => info.count > 0)
+				.map(([name]) => name);
+
+			if (availableColors.length === 0) return null;
+
+			const color = availableColors[Math.floor(Math.random() * availableColors.length)];
+			colorUsage[color].count--;
+			return color;
+		}
+
 		let newGrid = Array(rows)
 			.fill(null)
-			.map(() =>
-				Array(cols)
-					.fill(null)
-					.map(() => {
-						const availableColors = Object.entries(colors)
-							.filter(([_, info]) => info.count > 0)
-							.map(([name]) => name);
-						return availableColors[Math.floor(Math.random() * availableColors.length)];
-					})
-			);
+			.map(() => Array(cols).fill(null));
+
+		switch (symmetry) {
+			case 'horizontal': {
+				const midRow = Math.floor(rows / 2);
+				// Fill top half
+				for (let i = 0; i < midRow; i++) {
+					for (let j = 0; j < cols; j++) {
+						const color = getRandomAvailableColor();
+						if (color) {
+							newGrid[i][j] = color;
+							newGrid[rows - 1 - i][j] = color; // Mirror to bottom
+						}
+					}
+				}
+				// If odd number of rows, fill middle row
+				if (rows % 2 !== 0) {
+					for (let j = 0; j < cols; j++) {
+						const color = getRandomAvailableColor();
+						if (color) {
+							newGrid[midRow][j] = color;
+						}
+					}
+				}
+				break;
+			}
+
+			case 'vertical': {
+				const midCol = Math.floor(cols / 2);
+				// Fill left half
+				for (let i = 0; i < rows; i++) {
+					for (let j = 0; j < midCol; j++) {
+						const color = getRandomAvailableColor();
+						if (color) {
+							newGrid[i][j] = color;
+							newGrid[i][cols - 1 - j] = color; // Mirror to right
+						}
+					}
+				}
+				// If odd number of columns, fill middle column
+				if (cols % 2 !== 0) {
+					for (let i = 0; i < rows; i++) {
+						const color = getRandomAvailableColor();
+						if (color) {
+							newGrid[i][midCol] = color;
+						}
+					}
+				}
+				break;
+			}
+
+			case 'rotation180': {
+				const midRow = Math.floor(rows / 2);
+				const midCol = Math.floor(cols / 2);
+				// Fill quarter of the grid
+				for (let i = 0; i < midRow; i++) {
+					for (let j = 0; j < midCol; j++) {
+						const color = getRandomAvailableColor();
+						if (color) {
+							// Place in all four corners
+							newGrid[i][j] = color;
+							newGrid[i][cols - 1 - j] = color;
+							newGrid[rows - 1 - i][j] = color;
+							newGrid[rows - 1 - i][cols - 1 - j] = color;
+						}
+					}
+				}
+				break;
+			}
+
+			case 'rotation90': {
+				const midRow = Math.floor(rows / 2);
+				const midCol = Math.floor(cols / 2);
+				// Fill quarter of the grid
+				for (let i = 0; i < midRow; i++) {
+					for (let j = 0; j < midCol; j++) {
+						const color = getRandomAvailableColor();
+						if (color) {
+							// Rotate four times
+							newGrid[i][j] = color;
+							newGrid[j][rows - 1 - i] = color;
+							newGrid[rows - 1 - i][cols - 1 - j] = color;
+							newGrid[cols - 1 - j][i] = color;
+						}
+					}
+				}
+				break;
+			}
+
+			default: {
+				// No symmetry - fill normally
+				for (let i = 0; i < rows; i++) {
+					for (let j = 0; j < cols; j++) {
+						const color = getRandomAvailableColor();
+						if (color) {
+							newGrid[i][j] = color;
+						}
+					}
+				}
+			}
+		}
+
 		grid = newGrid;
 	}
 
@@ -46,7 +155,7 @@
 		<div class="card bg-base-200 shadow-xl">
 			<div class="card-body p-4">
 				<h2 class="card-title mb-4 text-lg">Grid Settings</h2>
-				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
 					<div class="form-control">
 						<label class="label" for="rows-input">
 							<span class="label-text">Rows</span>
@@ -73,6 +182,23 @@
 							max="8"
 							class="input input-sm input-bordered w-full"
 						/>
+					</div>
+
+					<div class="form-control">
+						<label class="label" for="symmetry-input">
+							<span class="label-text">Symmetry</span>
+						</label>
+						<select
+							id="symmetry-input"
+							bind:value={symmetry}
+							class="select select-bordered select-sm w-full"
+						>
+							<option value="none">None</option>
+							<option value="horizontal">Horizontal Mirror</option>
+							<option value="vertical">Vertical Mirror</option>
+							<option value="rotation180">180° Rotation</option>
+							<option value="rotation90">90° Rotation</option>
+						</select>
 					</div>
 				</div>
 

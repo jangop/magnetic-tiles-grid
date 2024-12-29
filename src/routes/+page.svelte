@@ -183,8 +183,7 @@
 		<!-- Controls -->
 		<div class="card bg-base-200 shadow-xl">
 			<div class="card-body p-4">
-				<h2 class="card-title mb-4 text-lg">Grid Settings</h2>
-				<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-4">
 					<div class="form-control">
 						<label class="label" for="rows-input">
 							<span class="label-text">Rows</span>
@@ -230,9 +229,6 @@
 							<option value="rotation90">90° Rotation</option>
 						</select>
 					</div>
-				</div>
-
-				<div class="mt-4 flex gap-2">
 					<div class="form-control">
 						<label class="label" for="pattern-count">
 							<span class="label-text">Number of Patterns</span>
@@ -246,15 +242,33 @@
 							class="input input-sm input-bordered w-20"
 						/>
 					</div>
+				</div>
+
+				<div class="flex gap-2">
 					<button
 						class="btn btn-primary btn-sm"
 						onclick={() => generateMultipleGrids(patternCount)}
 					>
 						Generate Patterns
 					</button>
-					<button class="btn btn-ghost btn-sm" onclick={() => window.print()}>
+					<button class="btn btn-secondary btn-sm" onclick={() => window.print()}>
 						Print All Patterns
 					</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Selected Grid Display -->
+		<div class="card bg-base-200 shadow-xl">
+			<div class="card-body p-4">
+				<div class="grid-container" style={`grid-template-columns: repeat(${cols}, 1fr);`}>
+					{#each grid as row, i}
+						{#each row as cell, j}
+							<div class="grid-item">
+								<Tile color={cell} />
+							</div>
+						{/each}
+					{/each}
 				</div>
 			</div>
 		</div>
@@ -262,7 +276,6 @@
 		<!-- Pattern Gallery -->
 		<div class="card bg-base-200 shadow-xl print:hidden">
 			<div class="card-body p-4">
-				<h2 class="card-title mb-4 text-lg">Pattern Gallery</h2>
 				<div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
 					{#each patterns as pattern, i}
 						<button
@@ -288,25 +301,9 @@
 			</div>
 		</div>
 
-		<!-- Selected Grid Display -->
-		<div class="card bg-base-200 shadow-xl">
-			<div class="card-body p-4">
-				<div class="grid-container" style={`grid-template-columns: repeat(${cols}, 1fr);`}>
-					{#each grid as row, i}
-						{#each row as cell, j}
-							<div class="grid-item">
-								<Tile color={cell} />
-							</div>
-						{/each}
-					{/each}
-				</div>
-			</div>
-		</div>
-
 		<!-- Color Inventory -->
 		<div class="card bg-base-200 shadow-xl">
 			<div class="card-body p-4">
-				<h2 class="card-title mb-4 text-lg">Available Colors</h2>
 				<div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
 					{#each Object.entries(colors) as [name, info]}
 						<div class="form-control">

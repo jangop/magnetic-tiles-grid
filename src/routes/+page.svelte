@@ -86,10 +86,10 @@
 		<!-- Grid Display -->
 		<div class="card bg-base-200 shadow-xl print:shadow-none">
 			<div class="card-body p-4">
-				<div class="grid gap-1" style="grid-template-columns: repeat({cols}, minmax(0, 1fr))">
+				<div class="grid-container" style={`grid-template-columns: repeat(${cols}, 1fr);`}>
 					{#each grid as row, i}
 						{#each row as cell, j}
-							<div class="h-12 w-12 print:h-24 print:w-24">
+							<div class="grid-item">
 								<Tile color={cell} />
 							</div>
 						{/each}
@@ -139,6 +139,26 @@
 			max-width: none !important;
 			padding: 0 !important;
 			margin: 0 !important;
+		}
+	}
+
+	.grid-container {
+		display: grid;
+		gap: 8px; /* Adjust the gap as needed */
+		border: 2px solid var(--base-300);
+		max-width: fit-content; /* Adjusts to fit the content */
+		margin: 0 auto; /* Centers the grid */
+	}
+
+	.grid-item {
+		height: 3rem; /* Adjust the size as needed */
+		width: 3rem;
+	}
+
+	@media print {
+		.grid-item {
+			height: 6rem;
+			width: 6rem;
 		}
 	}
 </style>

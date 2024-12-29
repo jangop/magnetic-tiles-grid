@@ -1,8 +1,6 @@
-<!-- src/lib/components/Tile.svelte -->
 <script lang="ts">
 	export let color: string;
 
-	// Calculate slightly different shades for each triangle
 	$: colorObj = {
 		topLeft: `var(--tile-${color}-light)`,
 		topRight: `var(--tile-${color}-base)`,

@@ -1,156 +1,144 @@
 <!-- src/routes/+page.svelte -->
-<script>
-    import { browser } from '$app/environment';
-    
-    let colors = $state({
-      red: { count: 10, color: '#FF0000' },
-      blue: { count: 10, color: '#0000FF' },
-      yellow: { count: 10, color: '#FFD700' },
-      green: { count: 10, color: '#008000' }
-    });
-    
-    let rows = $state(4);
-    let cols = $state(4);
-    let grid = $state([]);
-    let symmetry = $state('none'); // 'none', 'mirror', 'rotation'
-  
-    function generateGrid() {
-      let newGrid = Array(rows).fill().map(() => Array(cols).fill(null));
-      const availableColors = Object.entries(colors)
-        .filter(([_, info]) => info.count > 0)
-        .map(([name, _]) => name);
-  
-      // Basic fill for now - we'll enhance this with symmetry later
-      for (let i = 0; i < rows; i++) {
-        for (let j = 0; j < cols; j++) {
-          const randomColor = availableColors[Math.floor(Math.random() * availableColors.length)];
-          newGrid[i][j] = randomColor;
-        }
-      }
-      
-      grid = newGrid;
-    }
-  
-    function printGrid() {
-      window.print();
-    }
-  
-    // Initialize grid on component mount
-    $effect(() => {
-      if (browser) {
-        generateGrid();
-      }
-    });
-  </script>
-  
-  <div class="container mx-auto p-4">
-    <div class="flex flex-col gap-8">
-      <!-- Controls -->
-      <div class="card bg-base-200 shadow-xl">
-        <div class="card-body">
-          <h2 class="card-title">Grid Settings</h2>
-          <div class="flex gap-4 flex-wrap">
-            <div class="form-control w-full max-w-xs">
-              <label class="label">
-                <span class="label-text">Rows</span>
-              </label>
-              <input 
-                type="number" 
-                bind:value={rows} 
-                min="1" 
-                max="8"
-                class="input input-bordered w-full max-w-xs" 
-              />
-            </div>
-            
-            <div class="form-control w-full max-w-xs">
-              <label class="label">
-                <span class="label-text">Columns</span>
-              </label>
-              <input 
-                type="number" 
-                bind:value={cols} 
-                min="1" 
-                max="8"
-                class="input input-bordered w-full max-w-xs" 
-              />
-            </div>
-  
-            <div class="form-control w-full max-w-xs">
-              <label class="label">
-                <span class="label-text">Symmetry</span>
-              </label>
-              <select bind:value={symmetry} class="select select-bordered">
-                <option value="none">None</option>
-                <option value="mirror">Mirror</option>
-                <option value="rotation">Rotation</option>
-              </select>
-            </div>
-          </div>
-  
-          <div class="flex gap-4 mt-4">
-            <button class="btn btn-primary" on:click={generateGrid}>
-              Generate New Grid
-            </button>
-            <button class="btn btn-secondary" on:click={printGrid}>
-              Print Grid
-            </button>
-          </div>
-        </div>
-      </div>
-  
-      <!-- Grid Display -->
-      <div class="card bg-base-200 shadow-xl">
-        <div class="card-body">
-          <h2 class="card-title">Generated Grid</h2>
-          <div class="grid gap-2" style="grid-template-columns: repeat({cols}, minmax(0, 1fr));">
-            {#each grid as row, i}
-              {#each row as cell, j}
-                <div 
-                  class="aspect-square border-2 border-base-300"
-                  style="background-color: {colors[cell]?.color};"
-                ></div>
-              {/each}
-            {/each}
-          </div>
-        </div>
-      </div>
-  
-      <!-- Color Inventory -->
-      <div class="card bg-base-200 shadow-xl">
-        <div class="card-body">
-          <h2 class="card-title">Available Colors</h2>
-          <div class="flex gap-4 flex-wrap">
-            {#each Object.entries(colors) as [name, info]}
-              <div class="form-control">
-                <label class="label">
-                  <span class="label-text">{name}</span>
-                </label>
-                <input 
-                  type="number" 
-                  bind:value={info.count} 
-                  min="0"
-                  class="input input-bordered w-24" 
-                />
-              </div>
-            {/each}
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <style>
-    @media print {
-      .card:not(:nth-child(2)) {
-        display: none;
-      }
-      .card {
-        box-shadow: none !important;
-        background: none !important;
-      }
-      .card-title {
-        display: none;
-      }
-    }
-  </style>
+<script lang="ts">
+	import Tile from '$lib/components/Tile.svelte';
+	import { browser } from '$app/environment';
+
+	let colors = $state({
+		red: { count: 10 },
+		blue: { count: 10 },
+		yellow: { count: 10 },
+		green: { count: 10 },
+		purple: { count: 10 },
+		orange: { count: 10 }
+	});
+
+	let rows = $state(4);
+	let cols = $state(4);
+	let grid = $state<string[][]>([]);
+	let symmetry = $state('none'); // 'none', 'mirror', 'rotation'
+
+	function generateGrid() {
+		let newGrid = Array(rows)
+			.fill(null)
+			.map(() =>
+				Array(cols)
+					.fill(null)
+					.map(() => {
+						const availableColors = Object.entries(colors)
+							.filter(([_, info]) => info.count > 0)
+							.map(([name]) => name);
+						return availableColors[Math.floor(Math.random() * availableColors.length)];
+					})
+			);
+		grid = newGrid;
+	}
+
+	$effect(() => {
+		if (browser) {
+			generateGrid();
+		}
+	});
+</script>
+
+<div class="container mx-auto max-w-2xl p-4">
+	<div class="flex flex-col gap-6">
+		<!-- Controls -->
+		<div class="card bg-base-200 shadow-xl">
+			<div class="card-body p-4">
+				<h2 class="card-title mb-4 text-lg">Grid Settings</h2>
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<div class="form-control">
+						<label class="label" for="rows-input">
+							<span class="label-text">Rows</span>
+						</label>
+						<input
+							id="rows-input"
+							type="number"
+							bind:value={rows}
+							min="1"
+							max="8"
+							class="input input-sm input-bordered w-full"
+						/>
+					</div>
+
+					<div class="form-control">
+						<label class="label" for="cols-input">
+							<span class="label-text">Columns</span>
+						</label>
+						<input
+							id="cols-input"
+							type="number"
+							bind:value={cols}
+							min="1"
+							max="8"
+							class="input input-sm input-bordered w-full"
+						/>
+					</div>
+				</div>
+
+				<div class="mt-4 flex gap-2">
+					<button class="btn btn-primary btn-sm" onclick={generateGrid}> Generate New Grid </button>
+					<button class="btn btn-ghost btn-sm" onclick={() => window.print()}> Print Grid </button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Grid Display -->
+		<div class="card bg-base-200 shadow-xl print:shadow-none">
+			<div class="card-body p-4">
+				<div class="grid gap-1" style="grid-template-columns: repeat({cols}, minmax(0, 1fr))">
+					{#each grid as row, i}
+						{#each row as cell, j}
+							<div class="h-12 w-12 print:h-24 print:w-24">
+								<Tile color={cell} />
+							</div>
+						{/each}
+					{/each}
+				</div>
+			</div>
+		</div>
+
+		<!-- Color Inventory -->
+		<div class="card bg-base-200 shadow-xl">
+			<div class="card-body p-4">
+				<h2 class="card-title mb-4 text-lg">Available Colors</h2>
+				<div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+					{#each Object.entries(colors) as [name, info]}
+						<div class="form-control">
+							<label class="label" for={`${name}-input`}>
+								<span class="label-text capitalize">{name}</span>
+							</label>
+							<input
+								id={`${name}-input`}
+								type="number"
+								bind:value={info.count}
+								min="0"
+								class="input input-sm input-bordered w-20"
+							/>
+						</div>
+					{/each}
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<style>
+	@media print {
+		.card:not(:nth-child(2)) {
+			display: none;
+		}
+		.card-body {
+			padding: 0;
+		}
+		:global(body) {
+			margin: 0;
+			padding: 0;
+		}
+		.container {
+			max-width: none !important;
+			padding: 0 !important;
+			margin: 0 !important;
+		}
+	}
+</style>

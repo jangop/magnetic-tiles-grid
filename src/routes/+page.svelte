@@ -22,6 +22,8 @@
 
 	let symmetry = $state<'random' | SymmetryType>('random');
 
+	let patternCount = $state(9); // Default number of patterns to generate
+
 	// Update grid when selected pattern changes
 	$effect(() => {
 		if (patterns.length > 0) {
@@ -231,10 +233,28 @@
 				</div>
 
 				<div class="mt-4 flex gap-2">
-					<button class="btn btn-primary btn-sm" onclick={() => generateMultipleGrids(9)}>
+					<div class="form-control">
+						<label class="label" for="pattern-count">
+							<span class="label-text">Number of Patterns</span>
+						</label>
+						<input
+							id="pattern-count"
+							type="number"
+							bind:value={patternCount}
+							min="1"
+							max="15"
+							class="input input-sm input-bordered w-20"
+						/>
+					</div>
+					<button
+						class="btn btn-primary btn-sm"
+						onclick={() => generateMultipleGrids(patternCount)}
+					>
 						Generate Patterns
 					</button>
-					<button class="btn btn-ghost btn-sm" onclick={() => window.print()}> Print Grid </button>
+					<button class="btn btn-ghost btn-sm" onclick={() => window.print()}>
+						Print All Patterns
+					</button>
 				</div>
 			</div>
 		</div>
@@ -310,20 +330,32 @@
 
 <style>
 	@media print {
-		/* Reset the hiding of cards for print */
+		/* Reset all cards for print */
 		.card {
 			display: block !important;
 			background: none !important;
 			box-shadow: none !important;
+			break-inside: avoid !important;
 		}
 
-		/* Hide everything except the main grid */
-		.card:not(:nth-child(3)) {
+		/* Hide controls and color inventory */
+		.card:first-child,
+		.card:last-child {
 			display: none !important;
 		}
 
+		/* Hide the large selected pattern display */
+		.card:nth-child(3) {
+			display: none !important;
+		}
+
+		/* Show the pattern gallery */
+		.print:hidden {
+			display: block !important;
+		}
+
 		.card-body {
-			padding: 0;
+			padding: 0.5cm !important;
 		}
 
 		:global(body) {
@@ -338,9 +370,37 @@
 		}
 
 		/* Adjust grid size for printing */
-		.grid-item {
-			height: 6rem;
-			width: 6rem;
+		.grid-container-small {
+			gap: 4px !important;
+		}
+
+		.grid-item-small {
+			height: 2rem !important;
+			width: 2rem !important;
+		}
+
+		/* Layout for print */
+		.grid {
+			grid-template-columns: repeat(3, 1fr) !important;
+			gap: 1cm !important;
+		}
+
+		/* Ensure good page breaks */
+		@page {
+			margin: 1cm;
+		}
+
+		button {
+			border: 1px solid #ccc !important;
+			background: none !important;
+		}
+
+		button:hover {
+			background: none !important;
+		}
+
+		.card-title {
+			display: none !important;
 		}
 	}
 

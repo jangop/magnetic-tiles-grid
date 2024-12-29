@@ -15,32 +15,36 @@
 	let rows = $state(4);
 	let cols = $state(4);
 	let grid = $state<string[][]>([]);
+	let patterns = $state<string[][][]>([]); // Array of grids
+	let selectedPatternIndex = $state<number>(0);
 	const SYMMETRY_TYPES = ['none', 'horizontal', 'vertical', 'rotation180', 'rotation90'] as const;
 	type SymmetryType = (typeof SYMMETRY_TYPES)[number];
 
 	let symmetry = $state<'random' | SymmetryType>('random');
 
-	function generateGrid() {
+	// Update grid when selected pattern changes
+	$effect(() => {
+		if (patterns.length > 0) {
+			grid = patterns[selectedPatternIndex];
+		}
+	});
+
+	function generateGrid(colorUsage: Record<string, { count: number }>) {
 		// If symmetry is random, pick a random type
 		const effectiveSymmetry: SymmetryType =
 			symmetry === 'random'
 				? SYMMETRY_TYPES[Math.floor(Math.random() * SYMMETRY_TYPES.length)]
 				: symmetry;
 
-		// Create a copy of colors to track usage
-		const colorUsage = Object.fromEntries(
-			Object.entries(colors).map(([color, info]) => [color, { count: info.count }])
-		);
-
 		function getRandomAvailableColor(multiplier: number = 1): string | null {
 			const availableColors = Object.entries(colorUsage)
-				.filter(([_, info]) => info.count >= multiplier) // Check if we have enough tiles
+				.filter(([_, info]) => info.count >= multiplier)
 				.map(([name]) => name);
 
 			if (availableColors.length === 0) return null;
 
 			const color = availableColors[Math.floor(Math.random() * availableColors.length)];
-			colorUsage[color].count -= multiplier; // Subtract the actual number of tiles we'll use
+			colorUsage[color].count -= multiplier;
 			return color;
 		}
 
@@ -148,12 +152,26 @@
 			}
 		}
 
-		grid = newGrid;
+		return newGrid;
+	}
+
+	function generateMultipleGrids(count: number = 9) {
+		let newPatterns = [];
+		for (let i = 0; i < count; i++) {
+			// Clone colors for each pattern
+			const colorUsage = Object.fromEntries(
+				Object.entries(colors).map(([color, info]) => [color, { count: info.count }])
+			);
+			let pattern = generateGrid(colorUsage);
+			newPatterns.push(pattern);
+		}
+		patterns = newPatterns;
+		selectedPatternIndex = 0;
 	}
 
 	$effect(() => {
 		if (browser) {
-			generateGrid();
+			generateMultipleGrids(9);
 		}
 	});
 </script>
@@ -213,14 +231,45 @@
 				</div>
 
 				<div class="mt-4 flex gap-2">
-					<button class="btn btn-primary btn-sm" onclick={generateGrid}> Generate New Grid </button>
+					<button class="btn btn-primary btn-sm" onclick={() => generateMultipleGrids(9)}>
+						Generate Patterns
+					</button>
 					<button class="btn btn-ghost btn-sm" onclick={() => window.print()}> Print Grid </button>
 				</div>
 			</div>
 		</div>
 
-		<!-- Grid Display -->
-		<div class="card bg-base-200 shadow-xl print:shadow-none">
+		<!-- Pattern Gallery -->
+		<div class="card bg-base-200 shadow-xl print:hidden">
+			<div class="card-body p-4">
+				<h2 class="card-title mb-4 text-lg">Pattern Gallery</h2>
+				<div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+					{#each patterns as pattern, i}
+						<button
+							class="relative rounded-lg p-2 transition-colors hover:bg-base-300"
+							class:bg-primary-content={i === selectedPatternIndex}
+							onclick={() => (selectedPatternIndex = i)}
+						>
+							<div
+								class="grid-container-small"
+								style={`grid-template-columns: repeat(${cols}, 1fr);`}
+							>
+								{#each pattern as row, i}
+									{#each row as cell, j}
+										<div class="grid-item-small">
+											<Tile color={cell} />
+										</div>
+									{/each}
+								{/each}
+							</div>
+						</button>
+					{/each}
+				</div>
+			</div>
+		</div>
+
+		<!-- Selected Grid Display -->
+		<div class="card bg-base-200 shadow-xl">
 			<div class="card-body p-4">
 				<div class="grid-container" style={`grid-template-columns: repeat(${cols}, 1fr);`}>
 					{#each grid as row, i}
@@ -261,20 +310,37 @@
 
 <style>
 	@media print {
-		.card:not(:nth-child(2)) {
-			display: none;
+		/* Reset the hiding of cards for print */
+		.card {
+			display: block !important;
+			background: none !important;
+			box-shadow: none !important;
 		}
+
+		/* Hide everything except the main grid */
+		.card:not(:nth-child(3)) {
+			display: none !important;
+		}
+
 		.card-body {
 			padding: 0;
 		}
+
 		:global(body) {
 			margin: 0;
 			padding: 0;
 		}
+
 		.container {
 			max-width: none !important;
 			padding: 0 !important;
 			margin: 0 !important;
+		}
+
+		/* Adjust grid size for printing */
+		.grid-item {
+			height: 6rem;
+			width: 6rem;
 		}
 	}
 
@@ -295,6 +361,52 @@
 		.grid-item {
 			height: 6rem;
 			width: 6rem;
+		}
+	}
+
+	.grid-container-small {
+		display: grid;
+		gap: 2px;
+		border: 1px solid var(--base-300);
+		max-width: fit-content;
+		margin: 0 auto;
+		padding: 4px;
+	}
+
+	.grid-item-small {
+		height: 0.75rem;
+		width: 0.75rem;
+	}
+
+	@media (min-width: 640px) {
+		.grid-item-small {
+			height: 1rem;
+			width: 1rem;
+		}
+	}
+
+	@media print {
+		/* Modify print styles to handle multiple patterns */
+		.grid-container {
+			page-break-inside: avoid;
+		}
+
+		/* When printing all patterns */
+		@page {
+			size: A4;
+			margin: 1cm;
+		}
+
+		.print-patterns {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 1cm;
+			page-break-inside: avoid;
+		}
+
+		.grid-item {
+			height: 4rem;
+			width: 4rem;
 		}
 	}
 </style>
